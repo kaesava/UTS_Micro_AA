@@ -1,15 +1,11 @@
 ---
 title: "Assignment Report - Microcredentials UTS Advanced Analytics"
-author: "Kesh Kshetrapalapuram (Telstra)"
+author: "Kalyanaraman (Kesh) Kshetrapalapuram (Telstra)"
 header-includes:
   - \usepackage{enumitem}
   - \setlistdepth{20}
   - \renewlist{itemize}{itemize}{20}
   - \renewlist{enumerate}{enumerate}{20}
-  - \setlist[itemize]{label=$\cdot$}
-  - \setlist[itemize,1]{label=\textbullet}
-  - \setlist[itemize,2]{label=--}
-  - \setlist[itemize,3]{label=*}
 output:
   word_document: default
   pdf_document: 
@@ -17,7 +13,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set( eval = FALSE, echo = FALSE, warning=FALSE, error=FALSE, message=FALSE)
+knitr::opts_chunk$set(eval = FALSE, echo = FALSE, warning=FALSE, error=FALSE, message=FALSE)
 # add eval = FALSE, when knitting finally
 ```
 
@@ -25,52 +21,55 @@ knitr::opts_chunk$set( eval = FALSE, echo = FALSE, warning=FALSE, error=FALSE, m
 
 ## The Problem, Inputs & Outputs
 
-The assignment task was to use the provided housing dataset to build a robust classification model that predicts the `Qualified` target attribute (binary `0` meaning not qualified or `1` meaning qualified). The ask was to then use the model to predict the `QUALIFIED` target attribute for a new (testing) dataset.
+The assignment task was to use the provided training dataset to build a robust classifier (classification model) that can accurately predict the `QUALIFIED` target attribute (binary `0` meaning not qualified or `1` meaning qualified) on unseen data. The ask was to then use the model to predict the `QUALIFIED` target attribute for the provided test dataset, and write a report summarising the approach, results, and a discussion on learnings.
 
-From the attributes, it seems the dataset represents a property data, where we are attempting to build a model to understand where a potential sale is qualified.
+From the descriptions of the attributes provided, it seems the dataset represents property data, where we are likely attempting to understand when a potential sale is qualified.
 
-Input: A training dataset with examples (rows/records) and attributes (columns / features), along with the target attribute (in this case `QUALIFIED`).
+### Input
+
+A training dataset with examples (rows/records) and attributes (columns / features), along with the target attribute (in this case `QUALIFIED`).
 
 The training (`Assignment-HousingDataset.csv`) and testing (`Assignment-UnknownDataset.csv`) csv files were downloaded from the UTS Canvas site (`https://canvas.open.uts.edu.au/courses/973/assignments`).
 
-Outputs:
-* The "ideal" data mining model that can be used to predict the `QUALIFIED` attribute with high accuracy
+### Outputs
+* The "best" classification model that can be used to predict the `QUALIFIED` attribute
 * The prediction (`QUALIFIED` attribute) for the provided test examples
-* This report outlining approach, configuration, results and learnings
+* This report outlining approach, configuration, results and learnings (this report)
+
+While this report does not show source `R` code, the full code is available from here: https://github.com/kaesava/UTS_Micro_AA/blob/main/assignment.Rmd. An exploration `R` file is also available here: https://github.com/kaesava/UTS_Micro_AA/blob/main/explore.R
 
 # High-level Approach
 
-I decided to use `R`, so I can another programming language, one that seems to be popular among data scientists. I installed the latest versions of `R` (v 4.0.3) and `R Studio` (v1.3.1093), and wrote this assignment as an `R` Notebook that can be easily compiled into Word and/or PDF.
+I decided to use `R`, so I can learn another programming language, one that seems to be popular among data scientists. I installed the latest versions of `R` (v 4.0.3) and `R Studio` (v1.3.1093), and wrote this assignment as an `R` Notebook that can be easily compiled into Word and/or PDF.
 
-I followed these steps:
-* I prepared the R environment byloading the packages I need
+A a high level, I followed these steps:
+
+* I prepared the `R` environment by loading the packages I needed.
 * I loaded the provided training and testing datasets and explored the data using summary statistics and visualisations to learn more about each attribute in the training dataset (missing values, distribution, distribution relative to target attribute, etc.).
-* I split the training data into training (90%) and validation (10%), so that performance measures are reported on new (unseen) data
-* I pre-processed the data by removing redundant attributes, imputing missing values,  identifying and removing highly correlated numeric and categorical attributes, testing for outliers, creating new calculated attributes (like date durations),  one-hot-encoding categorical attributes and normalising/binning numeric attributes as needed. I found that this step was highly iterative - i.e., I built a "reference" random forest model (with standard hyperparameters), and based on the accuracy of the resulting classifiers, I re-visited and tuned each pre-processing steps several times.
+* I split the training data into training (90%) and validation (10%), so that performance measures are reported on new (unseen) data.
+* I pre-processed the data by removing redundant attributes, imputing missing values,  identifying and removing highly correlated numeric and categorical attributes, testing for outliers, creating new calculated attributes (like date durations),  one-hot-encoding categorical attributes and normalising/binning numeric attributes as needed. I found that this step was highly iterative. I built a "reference" random forest model (with default hyper-parameters), and depending on the accuracy (f-score) of the resulting classifier, I re-visited and tuned each pre-processing step several times.
 * I ran feature/attribute selection algorithms to determine importance and removed attributes that didn't contribute to the classification.
 * I balanced the training dataset so that we had the same number of examples in the `0` and `1` target attributes
 * I setup the training (classification) model parameters (like 10-fold cross validation). The random seed for every run of every training algorithm was set to a static number (`3433`) to minimise uncertainty through randomness.
-* I ran 5 different classification models (decision tree, k nearest neighbour, random forest, GBM, SVM, neural network and an ensemble model). For each classifier, I experimented with various hyperparameters (tuning) to determine the best performing one. I collected several accuracy measures (accuracy, F-score, AUC, time to run).
-* I determined the best classifier based these accuracy measures and applied it to the testing dataset, submitting the results to `kaggle`.
-
+* I ran 7 different classification algorithms (decision tree, k nearest neighbour, random forest, GBM, SVM, neural network and an ensemble model). For each classifier, I experimented with various hyper-parameters (tuning) to determine the best performing one. I collected several accuracy measures (accuracy, f-score, AUC, time to run).
+* I determined the best classifier based on various criteria (accuracy, time to run, etc.) and applied it to the testing dataset, submitting the results to `kaggle`.
 
 # Summary of Results
 
-I found that the random forest classifier performed best. The ideal hyperparameters used was: `mtry` = `83` (number of attributes randomly collected to be sampled at each split).
+The GBM classifier was selected. The ideal hyper-parameters used were: `n.trees` = `450`, `interaction.depth` = `10`, `shrinkage` = `0.1`, `n.minobsinnode` = `10` on full training set.
 
-Accuracy:
-F-Score:
-AUC:
-Time to run:
+* Accuracy: `90.83%`
+* f-score: `90.18%`
+* AUC: `96.04%`
+* Time to run: `~ 3` hours
 
-The best classifier that you selected - the type, its performance, how it solved the problem (if it makes sense for that type of classifier), and reasons for selecting it;
-
+I've outlined reasons for selecting it in the `Selecting the best model` section below.
 
 # Data Exploration, Pre-processing and Attribute Transformation
 
 ## Environment setup 
 
-I loaded R Libraries that I needed: like `caret` (for streamlining model training processes), `ggplot2` and `skimr` (for plot visualisation), etc.
+I loaded `R` libraries that I needed: like `caret` (for streamlining model training processes), and `ggplot2`(for visualisation). ~25 packages were used.
 
 ```{r lib_setup}
 if(!require(caret)){install.packages('caret')}
@@ -127,7 +126,7 @@ library(imager)
 
 ## Data Load
 
-The training (`Assignment-HousingDataset.csv`) and testing (`Assignment-UnknownDataset.csv`) csv files were downloaded from the UTS Canvas site (`https://canvas.open.uts.edu.au/courses/973/assignments`) and loaded into R. They were comma separated, with a header row, and had missing values left blank. I used the `read.csv` function to read in the csv files.
+The training (`Assignment-HousingDataset.csv`) and testing (`Assignment-UnknownDataset.csv`) csv files were downloaded from the UTS Canvas site (`https://canvas.open.uts.edu.au/courses/973/assignments`) and loaded into `R`.
 
 They were comma separated, with a header row, and had missing values left blank. I used the `read.csv` function to read in the csv files.
 
@@ -140,11 +139,21 @@ test <- raw_test
 
 The training dataset had `75,007` examples and `38` attributes (including the target attribute `QUALIFIED`). The testing dataset had `32,147` examples and `37` attributes (it did not include the target attribute). The attributes were visually examined. They included strings, dates and numbers, and had attributes with missing values.
 
+```{r visual_check}
+summ_train <- summary(raw_train)
+str_train <- str(raw_train)
+n_missing <- sapply(raw_train, function(x) sum(is.na(x)))
+```
+
+A brief explanation of each attribute is available from the UTS Canvas site (https://canvas.open.uts.edu.au/courses/973/assignments/2644) under the `Dataset` section.
+
 ## Data Exploration & Pre-Processing
 
 ### Using a Reference model
 
-A reference random forest model with 10-fold cross validation was used to test whether to (and how to) processed with cleansing and transformation decisions. If performance (F1 score) detiorated, the transformation was not done.
+A reference random forest model with 10-fold cross validation was used to test whether to (and how to) cleanse and transform attributes. If performance (f-score) deteriorated after a pre-processing step, the transformation was rolled back. Default hyper-parameters and a static random seed were used to minimise variation due to randomness. The validation set was different from the training set used.
+
+Further, all transformation applied to the training dataset were also applied to the validation and testing datasets.
 
 ### Setting the target attribute as categorical
 
@@ -156,9 +165,10 @@ train[,"QUALIFIED"] = factor(train[,"QUALIFIED"], labels = c("no", "yes"))
 
 ### Dropping attributes that add no value
 
-The following attributes are dropped:
+The following attributes were dropped:
+
 * `Row ID`: It is a unique arbitrary row identifier and therefore should not participate in prediction 
-* `GIS_LAST_MOD_DTTM`: Every example had the same value; it therefore cannot play a role in discriminating between the target attribute values
+* `GIS_LAST_MOD_DTTM`: Every example had the same value; it therefore cannot play a role in discriminating between the target attribute levels
 * `HEAT`, `STYLE`, `STRUCT`, `GRADE`, `CNDTN`, `EXTWALL`, `ROOF`, and `INTWALL`: Each of these descriptive attributes are already coded for by another attribute; the 1:1 between the code and description for each of these attributes was tested before they were dropped.
 
 ```{r drop_redundant_attribs}
@@ -170,7 +180,7 @@ test <- test[,!names(test) %in% cols]
 
 ### Splitting the data into Training & Validation
 
-90% of the data was used for training (randomly sampled), and 10% kept aside for validation. This was done to ensure that when we compare the performance of different classification algorithms (or even variants of an algorithm with different hyperparameters), it is done on a dataset never seen before, to avoid the effects of over-fitting (high variance).
+90% of the data was used for training (randomly sampled), and 10% kept aside for validation. This was done to ensure that when we compare the performance of different classification algorithms (or even variants of an algorithm with different hyper-parameters), it is done on a dataset never seen before, to avoid the effects of over-fitting (high variance).
 
 ```{r partition_data}
 set.seed(3433)
@@ -182,9 +192,10 @@ train <- train[validationRows,]
 ### Handling Date attributes
 
 Date fields were first cleansed:
-* The `SALEDATE` was read in as a string, but converted to a date. There were ~`15,885` examples with value `01/01/1900`. The initial strategy for this field was to mark these as missing (likely to be `0`) and then impute by categorising (binning) the date attribute and creating an additional `NA` category level. But this caused a reduction in both accuracy and the F-Score, likely because the interpretation of `1900` as missing may not have been correct.
 
-* The `YR_RMDL` attribute (year or re-model) has `36,456` missing values (more than half) in the training dataset, indicating that being missing may itself be important (it likely indicates no property re-modelling). Therefore, instead of imputing with median or mean, these were left as missing and treated as outlined in the next section. The attribute also includes invalid values like `20` and so, any year that was less than `1750` (most likely errors) was set a missing (only `1` example in the training dataset).
+* The `SALEDATE` was read in as a string, but converted to a date. There were ~`15,885` examples with value `01/01/1900`. The initial strategy for this field was to mark these as missing (likely to be `0`) and then impute by categorising (binning) the date attribute and creating an additional `NA` category level. But this caused a reduction in both accuracy and the f-score, likely because the interpretation of `1900` as missing may not have been correct. This was therefore reverted.
+
+* The `YR_RMDL` attribute (year or re-model) had `36,456` missing values (more than half) in the training dataset, suggesting that being missing may itself be important (it likely indicates no property re-modelling). Therefore, instead of imputing with median or mean, these were left as missing and treated (binned) as outlined in the next section. The attribute also included invalid values like `20` and so, any year that was less than `1750` (most likely errors) was set a missing.
 
 * There were two date-year attributes (`AYB` and `EYB`) denoting year of build and improvement. They included a handful of invalid (for a year) values like `0` and `20`. These, along with missing values (less than `~10`) were imputed with the median (median was used instead of mean to eliminate the effects of extremes).
 
@@ -215,6 +226,7 @@ test[,"EYB"] <- sapply(test[,"EYB"], function(x) ifelse(x < 1750, median(test[,"
 ```
 
 In addition to the date columns, attributes for durations between these dates were tested and found to be useful. Note that it may result in negative numbers too.
+
 * `AYB_TO_EYB` was calculated as `EYB` minus `AYB`
 * `AYB_TO_SALEDATE` was calculated as `SALEDATE` minus `AYB`
 * `AYB_TO_YR_RMDL` was calculated as `YR_RMDL` minus `AYB`
@@ -251,7 +263,7 @@ test$YR_RMDL_TO_SALEDATE <- year(test[,"SALEDATE"]) - test[,"YR_RMDL"]
 
 The `YR_RMDL` attribute (and duration attributes that include the `YR_RMDL` attribute) were then converted to categorical attributes using the `optbin` function in the `BBMisc` package. This function finds bin (category) boundaries that maximise prediction of the target attribute (i.e., provide the highest information gain). The missing values were coded with the `NA` label. The corresponding attributes in the validation and test dataset were also categorised using the same bin boundaries as those in the training dataset.
 
-Due to the large number of missing values, this method produced better accuracy (both accuracy and F1 score) compared with raw values with NAs imputed with the median.
+Due to the large number of missing values, this method produced better accuracy (both accuracy and f-score) compared with raw values with NAs imputed with the median. A more complex strategy for binning (built decision trees that predicted `QUALIFIED` based on these attributes, and used node decision points to create bins) was attempted, but this produced no better results.
 
 ```{r categorise_dates}
 
@@ -294,34 +306,31 @@ test[,"YR_RMDL_TO_SALEDATE"] <- sapply(test[,"YR_RMDL_TO_SALEDATE"], function(x)
 train[,"YR_RMDL_TO_SALEDATE"] <- factor(train[,"YR_RMDL_TO_SALEDATE"], labels = c("A", "B", "C"))
 validation[,"YR_RMDL_TO_SALEDATE"] <- factor(validation[,"YR_RMDL_TO_SALEDATE"], labels = c("A", "B", "C"))
 test[,"YR_RMDL_TO_SALEDATE"] <- factor(test[,"YR_RMDL_TO_SALEDATE"], labels = c("A", "B", "C"))
-
 ```
 
 ### Removing Highly Correlated Date Attributes
 
-Date attributes were tested for pair-wise for relatedness using Goodman and Kruskal’s `tau` measure, which is asymmetric (influence of attribute `x` on `y` may differ from `y` on `x`). The measure captures variability in on attribute that can be explained by another.
-
-captures the degree of difference in one attribute that can be explained by another attribute. It is asymmetric (so the influence on x by y is not the same as y on x), which makes it useful in determining which attribute is redundant and can be dropped.
+Date attributes were tested for pair-wise relatedness using `Goodman and Kruskal’s tau` measure. The measure captures the degree of difference in one attribute that can be explained by another attribute. It is asymmetric (so the influence on x by y is not the same as y on x), which makes it useful in determining which attributes are redundant and can be dropped.
 
 ```{r check_correlated_date}
-
 dt_attribs <- c('AYB', 'YR_RMDL', 'EYB', 'SALEDATE', 'AYB_TO_EYB', 'AYB_TO_SALEDATE', 'AYB_TO_YR_RMDL', 'EYB_TO_YR_RMDL', 'EYB_TO_SALEDATE', 'YR_RMDL_TO_SALEDATE')
 dt_GKtauDF <- GKtauDataframe(train[,dt_attribs])
 print(dt_GKtauDF)
-
 ```
+
+!!! IMAGE !!!
+
 Ignoring the main diagonal (correlation with self), the table shows that:
 * `YR_RMDL` is a strong predictor of `YR_RMDL_TO_SALEDATE`
 * `AYB_TO_YR_RMDL` is a strong predictor of `YR_RMDL` and `YR_RMDL_TO_SALE_DATE`
 * `EYB_TO_YR_RMDL` is a strong predictor of `YR_RMDL` and `YR_RMDL_TO_SALE_DATE`
 
-Therefore, the following attributes were removed from the analysis, as they are accounted for by other attributes: `YR_RMDL` and `YR_RMDL_TO_SALEDATE`. A test on the reference model showed no drop in accuracy.
+Therefore, the following attributes were removed from the analysis, as they are accounted for by other attributes: `YR_RMDL` and `YR_RMDL_TO_SALEDATE`. A validation on the reference model showed no drop in accuracy.
 
 ```{r drop_correlated_date}
 train <- subset(train, select=-c(YR_RMDL, YR_RMDL_TO_SALEDATE))
 validation <- subset(validation, select=-c(YR_RMDL, YR_RMDL_TO_SALEDATE))
 test <- subset(test, select=-c(YR_RMDL, YR_RMDL_TO_SALEDATE))
-
 ```
 
 ### Inputing Missing values for Numerical attributes
@@ -345,13 +354,17 @@ for (attr in numeric_with_na_attrs) {
 
 ### Visualising Numerical attributes
 
-The following numeric attributes were explored: `BATHRM`, `HF_BATHRM`, `NUM_UNITS`, `ROOMS`, `BEDRM`, `STORIES`, `SALE_NUM`, `BLDG_NUM`, `KITCHENS`, `FIREPLACES`, `PRICE`, `GBA`, `LANDAREA`. Summary statistics (including number of missing values, mean, standard deviation, and quartiles - 0th, 25th, 50th, 75th and 100th percentiles) were reviewed.
+The following numeric attributes were explored: `BATHRM`, `HF_BATHRM`, `NUM_UNITS`, `ROOMS`, `BEDRM`, `STORIES`, `SALE_NUM`, `BLDG_NUM`, `KITCHENS`, `FIREPLACES`, `PRICE`, `GBA`, `LANDAREA`.
+
+Summary statistics (including number of missing values, mean, standard deviation, and quartiles - 0th, 25th, 50th, 75th and 100th percentiles) were reviewed.
 
 ```{r numeric_explore}
 numeric_attrs <- c("BATHRM", "HF_BATHRM", "NUM_UNITS", "ROOMS", "BEDRM", "STORIES", "SALE_NUM", "BLDG_NUM", "KITCHENS", "FIREPLACES", "GBA", "LANDAREA")
 
 skim_with(numeric = sfl(hist = NULL))(train[,c(numeric_attrs, "PRICE")])
 ```
+
+!!! IMAGE !!!
 
 It is clear that most of these attributes are skewed heavily. Various visualisations of each the numeric attributes were explored. An example of a box chart and frequency chart of `Land Area` and `ROOMS` is shown below. For visualisation, the raw attribute as well as the log (base 10) of the attribute were charted; the log was used as there was a lot of skewness in the data (i.e., there are very high numbers with most in a smaller range). These visualisations helped guide the missing value treatment and other transformations of these attributes, as outlined below.
 
@@ -363,6 +376,8 @@ p4<- ggplot(train, aes(x=log10(LANDAREA))) +  geom_density() + labs(title="Log(L
 grid.arrange(p1, p2, p3, p4, nrow = 2)
 ```    
 
+!!! IMAGE !!!
+
 ```{r explore_plot_numeric2, fig.cap='Sample Numeric Attribute exploration', fig.pos='h', fig.align='center'}
 p1 <- ggplot(data = train, aes(x=QUALIFIED, y=ROOMS)) + geom_boxplot(fill="steelblue") + labs(title="# Rooms by Qualified", x="Qualified", y="# Rooms")
 p2<- ggplot(train, aes(x=ROOMS)) +  geom_density() + labs(title="# Rooms by Frequency", x="# Rooms", y="Frequency")
@@ -371,7 +386,9 @@ p4<- ggplot(train, aes(x=log10(ROOMS))) +  geom_density() + labs(title="Log (# R
 grid.arrange(p1, p2, p3, p4, nrow = 2)
 ```   
 
-Based on this skew, the numerical attributes were converted to the logarithm (`base 10`) of these attributes (except `SALE_NUM` and `BLDG_NUM` - which don't have the skew). Given that `log` (`base 10`) of `0` is negative infinity, these were replaced with `0`. However, the accuracy and F-score was tested on the reference model, and found not to be slightly worse. Therefore, this transformation was not used.
+!!! IMAGE !!!
+
+Based on this skew, the numerical attributes were converted to the logarithm (`base 10`) of these attributes (except `SALE_NUM` and `BLDG_NUM` - which didn't have the skew). Given that `log` (`base 10`) of `0` is negative infinity, these were replaced with `0`. However, the accuracy and f-score was tested on the reference model, and found to be slightly worse. Therefore, this transformation was not used.
 
 ```{r numerical_logvals}
 numeric_attrs_skew <- c("BATHRM", "HF_BATHRM", "NUM_UNITS", "ROOMS", "BEDRM", "STORIES", "KITCHENS", "FIREPLACES", "GBA", "LANDAREA")
@@ -379,7 +396,6 @@ numeric_attrs_skew <- c("BATHRM", "HF_BATHRM", "NUM_UNITS", "ROOMS", "BEDRM", "S
 #train[,numeric_attrs_skew] = as.data.frame(lapply(train[,numeric_attrs_skew], function(x) ifelse(log10(x) == -Inf, 0, log10(x))))
 #validation[,numeric_attrs_skew] = as.data.frame(lapply(validation[,numeric_attrs_skew], function(x) ifelse(log10(x) == -Inf, 0, log10(x))))
 #test[,numeric_attrs_skew] = as.data.frame(lapply(test[,numeric_attrs_skew], function(x) ifelse(log10(x) == -Inf, 0, log10(x))))
-
 ```   
 
 ### Removing outliers in Numerical attributes
@@ -390,14 +406,10 @@ However, in both cases, not only did removing the outliers make no difference (o
 
 ### Handling ordered categorical attributes as numeric attributes
 
-The `Condition` and `Grade` attributes came through as categorical, but were converted to numeric, so their relative importance is captured. For example, `CONDITION` = `Excellent` (coded as `6`) is quantatively better than `CONDITION` = `Poor` (coded as `1`). They were already coded from worst to best (numbers increasing). They were then normalised (scaled) them to `0` to `1` to ensure comparable contribution with other numerical attributes. `33` of `35` missing values in the training dataset had a target `QUALIFIED` value `0`. Therefore, I set the missing values to the median of the training dataset where `QUALIFIED` = `0`.
+The `Condition` and `Grade` attributes came through as categorical, but were converted to numeric, so their "order" was captured. For example, `CONDITION` = `Excellent` (coded as `6`) is quantatively better than `CONDITION` = `Poor` (coded as `1`). They were already coded from worst to best (numbers increasing). They were then normalised (scaled) them to `0` to `1` to ensure comparable contribution with other numerical attributes. `33` of `35` missing values in the training dataset had a target `QUALIFIED` value `0`. Therefore, the missing values were replaced with the median of the training dataset where `QUALIFIED` = `0`.
 
 ```{r handle_cndtn_grade}
 ord_cat_attrs <- c("CNDTN","GRADE")
-
-#train[,ord_cat_attrs] <- sapply(train[,ord_cat_attrs], function(x) ifelse(x == 0, NA,x))
-#validation[,ord_cat_attrs] <- sapply(validation[,ord_cat_attrs], function(x) ifelse(x == 0, NA,x))
-#test[,ord_cat_attrs] <- sapply(test[,ord_cat_attrs], function(x) ifelse(x == 0, NA,x))
 
 most_freq_cats <- sapply(train[train$QUALIFIED=="no",ord_cat_attrs],function(x) which.max(table(x)))
 names(most_freq_cats) <- ord_cat_attrs
@@ -420,7 +432,7 @@ test[,ord_cat_attrs] <- sapply(test[,ord_cat_attrs],function(x) BBmisc::normaliz
 
 ### Calculating Price per square foot
 
-Given this is property data and we have the `PRICE` abd `GBA` (Gross building area in square feet), it seemed useful to include the Price per square foot.
+Given this is property data and we have the `PRICE` and `GBA` (Gross building area in square feet), it seemed useful to include the Price per square foot.
 
 ```{r price_per_foot}
 
@@ -432,12 +444,13 @@ test$PRICE_BY_GBA <- test$PRICE / test$GBA;
 
 ### Imputing the `PRICE` and `PRICE_BY_GBA` Attributes
 
-The 'Price` and `PRICE_BY_GBA` attributes had ~`12,134` missing values and ~`18,696` with `PRICE` values under `$1000` (mainly `$0`). Different approaches to imputing missing values were taken:
+The `Price` and `PRICE_BY_GBA` attributes had ~`12,134` missing values and ~`18,696` with `PRICE` values under `$1000` (mainly `$0`). Different approaches to imputing missing values were taken:
+
 * Missing values were replaced with zero
 * Missing values were replaced with the median
 * The attribute was discretised (converted into categories/bins) using a decision tree. The decision tree provided the bin boundaries that maximised prediction of the target attribute
 
-Of all these approaches, the last one provided the best accuracy & F1 score, and was therefore used. This attribute seems to be a strong predictor of `QUALIFIED`, almost `89%` accuracy just with this one attribute.
+Of all these approaches, the last one provided the best accuracy & f-score, and was therefore used. This attribute seems to be a strong predictor of `QUALIFIED`, almost `88+%` accuracy just with this one attribute, hence the attention paid to various ways of treating this attribute.
 
 ```{r price_impute}
 
@@ -453,8 +466,6 @@ sub_model <- train(QUALIFIED~PRICE,
                         trControl=trainControl(method = "cv", number = 5),
 )
 
-#text(sub_model$finalModel)
-#cut-points: 
 #sub_model$finalModel$splits[,4]
 #64304.5 257992.0  82473.5 
 
@@ -475,8 +486,6 @@ sub_model <- train(QUALIFIED~PRICE_BY_GBA,
                         trControl=trainControl(method = "cv", number = 10),
 )
 
-#text(sub_model$finalModel)
-#cut-points: 
 #sub_model$finalModel$splits[,4]
 #57.03237, 171.34186, 235.28200
 
@@ -488,7 +497,7 @@ test$PRICE_BY_GBA <- sapply(test$PRICE_BY_GBA, function(x) factor(ifelse(x<=57.0
 
 ### Removing Highly Correlated Numeric Attributes
 
-Numeric attributes were tested for pair-wise correlation (relatedness). When two attributes are highly correlated, including them adds little value (extra information) to the classification and in fact can cause un-necessary computation. The `findCorrelation` method was used to find pair-wise correlation of each numeric attribute in the training dataset. A colour-coded visualisation of the correlation (darker means higher correlation, `blue` means negative, `red` means positive) helps visualise this.
+Numeric attributes were tested for pair-wise correlation (relatedness). When two attributes are highly correlated, including them adds little value (extra information) to the classification and in fact can cause un-necessary computation. The `findCorrelation` method was used to find pair-wise correlation of each numeric attribute in the training dataset which calculates the co-variance between them. A colour-coded visualisation of the correlation (darker means higher correlation, `blue` means negative, `red` means positive) helps visualise this.
 
 ```{r numeric_correlation}
 full_numeric_attrs <- c("BATHRM", "HF_BATHRM", "NUM_UNITS", "ROOMS", "BEDRM", "STORIES", "SALE_NUM", "BLDG_NUM", "KITCHENS", "FIREPLACES", "GBA", "LANDAREA", "AYB", "EYB", "GRADE", "CNDTN", "USECODE",  "AYB_TO_EYB", "AYB_TO_SALEDATE", "EYB_TO_SALEDATE")
@@ -499,9 +508,15 @@ c_vars <- findCorrelation(c, cutoff = 0.8, names = TRUE, exact = ncol(c) < 100)
 GGally::ggcorr(train, label_size=1)
 ```
 
-Based on the `findCorrelation` function with a threshold of `0.8`, the following attributes were dropped: `NUM_UNITS`, `AYB_TO_EYB`, `EYB_TO_SALEDATE`.
+!!! IMAGE !!!
 
-* `NUM_UNITS` was highly correlated with `INTWALL` and `FIREPLACES`, `AYB_TO_SALEDATE` with `EYB_TO_SALEDATE` and `AYB_TO_EYB` with `AYB`. Attributes that predict the target attribute poorer (checked against the reference model) were dropped.
+Based on the `findCorrelation` function with an absolute threshold of `0.8` (highly correlated), the following attributes were dropped: `NUM_UNITS`, `AYB_TO_EYB`, `EYB_TO_SALEDATE`.
+
+* `NUM_UNITS` was highly correlated with `INTWALL` and `FIREPLACES`
+* `AYB_TO_SALEDATE` was highly correlated with `EYB_TO_SALEDATE`
+* `AYB_TO_EYB` was highly correlated with `AYB`.
+
+Attributes that predict the target attribute poorer (checked against the reference model) were dropped (`NUM_UNITS`, `AYB_TO_EYB` and `EYB_TO_SALEDATE`).
 
 ```{r drop_correlated_numeric}
 train <- subset(train, select=-c(NUM_UNITS, AYB_TO_EYB, EYB_TO_SALEDATE))
@@ -511,7 +526,9 @@ test <- subset(test, select=-c(NUM_UNITS, AYB_TO_EYB, EYB_TO_SALEDATE))
 
 ### Missing values in Categorical attributes 
 
-In addition to `PRICE`, `PRICE_BY_GBA`, `AYB_TO_YR_RMDL`, and `EYB_TO_YR_RMDL`, the following are categorical attributes were found in the training dataset (excluding the target): `HEAT`, `AC`, `STYLE`, `STRUCT`, `EXTWALL`, `ROOF`, and `INTWALL`. Some of them came through as integers, but were converted to categorical attributes (`factors` in `R`). All of them had (the same) `20` examples with  missing values, and `19` of these had target `QUALIFIED` = `0`. Therefore, the missing values were imputed with the most frequently occurring category corresponding to `QUALIFIED` = `0` in the training dataset for each of these attributes. The testing dataset was also similarly transformed.
+In addition to `PRICE`, `PRICE_BY_GBA`, `AYB_TO_YR_RMDL`, and `EYB_TO_YR_RMDL`, the following categorical attributes were found in the training dataset (excluding the target): `HEAT`, `AC`, `STYLE`, `STRUCT`, `EXTWALL`, `ROOF`, and `INTWALL`. Some of them came through as integers, but were converted to categorical attributes (`factors` in `R`). All of them had (the same) `20` examples with  missing values, and `19` of these had target `QUALIFIED` = `0`. 
+
+While dropping them was considered, it was not possible to drop examples in the test set, so classifying them would have been a challenge. Therefore, the missing values were imputed with the most frequently occurring category corresponding to `QUALIFIED` = `0` in the training dataset for each of these attributes.
 
 ```{r handle_cat_attribs}
 cat_attrs <- c("HEAT", "AC", "STYLE", "STRUCT", "EXTWALL", "ROOF", "INTWALL")
@@ -535,7 +552,7 @@ test[is.na(test[,cat_attrs[1]]),cat_attrs] <- blank_cat_example
 
 ```
 
-The `USECODE` attribute came through as a number with `9` unique values, and is simply described as a `Property use code`, indicating that the attribute might need to be treated as categorical However, when it was converted to a categorical attribute (`factor` in `R`), even though the accuracy improved (on the reference model), the F-score was worse. Further, it took significantly longer to run, compared to when it was numeric. Therefore, it was left as a numeric attribute.
+The `USECODE` attribute came through as a number with `9` unique values, and is simply described as a `Property use code`, indicating that the attribute might need to be treated as categorical However, when it was converted to a categorical attribute (`factor` in `R`), even though the accuracy improved (on the reference model), the f-score was worse. Further, it took significantly longer to run, compared to when it was numeric. Therefore, it was left as a numeric attribute.
 
 ```{r handle_usecode}
 #train[,"USECODE"] <- factor(train[,"USECODE"])
@@ -545,12 +562,11 @@ The `USECODE` attribute came through as a number with `9` unique values, and is 
 
 ### Removing Highly Correlated Categorical Attributes
 
-Categorical attributes were tested pair-wise for correlation (relatedness) using the Cramer'r V test (which calculates the level of association between categorical attributes between `0` and `1`, the higher, the more related). The top 3 are shown:
+Categorical attributes were tested pair-wise for correlation (relatedness) using the `Cramer'r V` test (which calculates the level of association between categorical attributes between `0` and `1`, the higher, the more related). The `Cramer's phi` from the top 3 are shown:
 
-Attribute 1     Attribute 2     Cramer's phi
-EYB_TO_YR_RMDL  AYB_TO_YR_RMDL  0.7400530
-PRICE_BY_GBA    PRICE           0.7043760	
-AC              HEAT            0.5320308
+* `EYB_TO_YR_RMDL` & `AYB_TO_YR_RMDL`: `0.7400530`
+* `PRICE_BY_GBA` & `PRICE`: `0.7043760	`
+* `AC` & `HEAT`: `0.5320308`
 
 Using a threshold of `0.7` (which was reasonable based on documentation found), `AYB_TO_YR_RMDL` and `EYB_TO_YR_RMDL` were highly correlated, and `EYB_TO_YR_RMDL` was dropped (less predictive using the reference model). Similarly, `PRICE_BY_GBA` and `PRICE` were highly correlation, and `PRICE_PER_GBA` was dropped (less predictive using the reference model).
 
@@ -579,12 +595,11 @@ test <- subset(test, select=-c(PRICE_BY_GBA, EYB_TO_YR_RMDL))
 
 ```
 
-
 ### One-hot-encode categorical attributes
 
-One-hot-encoding is the splitting of a categorical attribute into multiple attributes, one for each factor level, with a `0` or `1` indiciating whether that level was set for that attribute. The `dummyVars` function in `R` was used to convert categorical attributes to one-hot-encoded attributes.
+One-hot-encoding is the splitting of a categorical attribute into multiple attributes, one for each factor level, with a `0` or `1` indicating whether that level was set for that attribute. The `dummyVars` function in `R` was used to convert categorical attributes to one-hot-encoded attributes.
 
-The `9` categorical attributes resulted in `104` one-hot-encoded attributes since some categorical attributes had over `20` levels. This caused some algorithms (like Random Forest) to take a very long time (one run took over 24 hours with 10-fold cross validation). To reduce the number of attributes levels, the `nearZeroVar` in the `MASS` package was used to identify the one-hot-encoded categorical attributes that have a zero or near-zero variance (i.e., they stay "very" constant) - these are less likely to impact the classification outcome. In fact, dropping these attributes actually lead to an improvement in accuracy and F-score (when tested on the reference model), likely because it was less prone to over-fitting to poorly predictive attributes. It reduced the number of categorical attributes from `104` to `27`.
+The `9` categorical attributes resulted in `104` one-hot-encoded attributes since some categorical attributes had over `20` levels. This caused some algorithms (like Random Forest) to take a very long time (one run took over 24 hours with 10-fold cross validation). To reduce the number of attributes levels, the `nearZeroVar` in the `MASS` package was used to identify the one-hot-encoded categorical attributes that have a zero or near-zero variance (i.e., they stay "very" constant) - these are less likely to impact the classification outcome. In fact, dropping these attributes actually lead to an improvement in accuracy and f-score (when tested on the reference model), likely because it was less prone to over-fitting to poorly predictive attributes. It reduced the number of categorical attributes from `104` to `27`.
 
 ```{r cat_levels}
 full_cat_attrs <- c("HEAT", "AC", "STYLE", "STRUCT", "EXTWALL", "ROOF", "INTWALL", "PRICE", "AYB_TO_YR_RMDL")
@@ -605,25 +620,17 @@ test_onehot <- predict(dummyVars(~., data=test[,full_cat_attrs]), test[,full_cat
 test_onehot <- as.data.frame(test_onehot[,nzv_keep])
 
 test <- cbind(test_onehot, test[,!(names(test) %in% full_cat_attrs)])
-
 ```
 
 ### Attribute Importance
 
-Importance is a measure of the predictive power of the attribute on the target attribute. Having attributes that don't contribute meaningfully causes un-necessary computation. Given that some algorithms are very expensive to run (where the complexity is a function of the number of attributes), removing ones that are not needed were important, will reduce the chance of over-fitting.
+Importance is a measure of the predictive power of the attribute on the target attribute. Having attributes that don't contribute meaningfully causes un-necessary computation. Given that some algorithms were very expensive to run (where the complexity is a function of the number of attributes), removing ones that are not needed was important.
 
 Forward (and backward) attribute selection algorithms let you select an optimal set of attributes starting with none (or all) of the attributes and building (or culling) them in steps. Here, backward selection was used using the `glmStepAIC` function in the `MASS` package that builds an underlying `GLM` (generalised linear model) model and keeps culling attributes using `AIC` -  which is an estimate the relative information loss, as attributes are removed.
 
-Using this method, the least predictive attributes were: 
+Another approach also taken, using the `Baruta` package in `R` to build 100 random forests and examine attributes used (and not used) to determine importance.
 
-The top 3 most useful attributes were: `PRICE`, `GBA`, `CNDTN`
-
-Another approach also taken, using the `Baruta` package in `R` to build 100 random forests and examine attributes used (and not used) to determine importance. Using this method, the recommendation from the algorithm was to remove these attributes:
-Again, the top 3 most useful attributes were: `PRICE`, `GBA`, `CNDTN`
-
-Note that it took 12 hours to run!
-
-It's good to see the level of agreement between the two approaches. The following attributes were dropped from the analysis
+The top 3 most useful attributes in both cases were: `PRICE`, `GBA`, and `CNDTN`. It was re-assuting to see the level of agreement between the two approaches.
 
 ```{r importance}
 train_control <-  trainControl(method = "none", verboseIter = TRUE)
@@ -653,16 +660,12 @@ baruta_full_tail <- rownames(head(imps2[order(imps2$meanImp), ],25))
 #`GBA`, `PRICE.A`, `EYB`, `CNDTN`, `PRICE.D`, `AYB`, `AYB_TO_SALEDATE`, `LANDAREA`, `SALEDATE`, `ROOMS`, `PRICE.C`, `GRADE`, `BEDRM`, `BATHRM`, `STORIES`, `FIREPLACES`, `PRICE.B`, `KITCHENS`, `USECODE`, `AYB_TO_YR_RMDL.C`, `SALE_NUM`, `STRUCT.1`, `AC.N`, `AC.Y`, `STYLE.4`, `ROOF.1`, `HF_BATHRM`, `EXTWALL.14`, `AYB_TO_YR_RMDL.B`, `HEAT.1`, `STRUCT.8`, `STRUCT.7`, `AYB_TO_YR_RMDL.A`, `ROOF.6`, `HEAT.13`, `STYLE.7`, `HEAT.7`, `INTWALL.6`, `ROOF.11`, `ROOF.2`, `INTWALL.3`, `STYLE.6`, `INTWALL.11`, `EXTWALL.22`, `STRUCT.6`.
 ```
 
-The following `16` attributes were found to be in the bottom `25` of both methods (when attributes ordered by importance descending), and were therefore dropped: `HEAT.1`, `HEAT.7`, `HEAT.13`, `AC.N`, `AC.Y`, `STYLE.7`, `STRUCT.1`, `STRUCT.6`, `EXTWALL.22`, `ROOF.1`, `ROOF.2`, `ROOF.6`, `ROOF.11`, `AYB_TO_YR_RMDL.B` `HF_BATHRM`, `SALE_NUM`.
+The following `16` attributes were found to be in the bottom `25` of both methods (when attributes ordered by importance descending), and were therefore dropped: `HEAT.1`, `HEAT.7`, `HEAT.13`, `AC.N`, `AC.Y`, `STYLE.7`, `STRUCT.1`, `STRUCT.6`, `EXTWALL.22`, `ROOF.1`, `ROOF.2`, `ROOF.6`, `ROOF.11`, `AYB_TO_YR_RMDL.B` `HF_BATHRM`, `SALE_NUM`. Checks on the reference model suggested no noticable drop in performance (f-score).
 
 ```{r drop_unimportant}
 unimportant_attrs <- intersect(step.imp_full_tail, baruta_full_tail)
- #[1] "HEAT.1"           "HEAT.7"           "HEAT.13"          "AC.N"             "AC.Y"             "STYLE.7"          "STRUCT.1"         "STRUCT.6"         "EXTWALL.22"      
+#[1] "HEAT.1"           "HEAT.7"           "HEAT.13"          "AC.N"             "AC.Y"             "STYLE.7"          "STRUCT.1"         "STRUCT.6"         "EXTWALL.22"      
 #[10] "ROOF.1"           "ROOF.2"           "ROOF.6"           "ROOF.11"          "AYB_TO_YR_RMDL.B" "HF_BATHRM"        "SALE_NUM"  
-
-#train_bak <- train
-#validation_bak <- validation
-#test_bak <- test
 
 train <- train[,!names(train) %in% unimportant_attrs]
 validation <- validation[,!names(validation) %in% unimportant_attrs]
@@ -675,10 +678,10 @@ plot(as.raster(png::readPNG("C:\\Users\\d309144\\OneDrive - Telstra\\Microcreden
 
 ### Balancing the training dataset
 
-In the training dataset, there were `29,090` examples with the target `QUALIFIED` attribute set to `1`, and `38,417` examples with target set to `0`. The dataset was therefore not fully balanced, it was skewed to value `0`. I applied the `SMOTE` (Synthetic Minority Over-Sampling Technique) over-sampling technique to the training dataset to generate "synthetic" minority-class examples (i.e. `QUALIFIED`=`0`) so that the training dataset ended up with the same number of `0` and `1` values in the target attribute. I chose not to under-sample the majority class so as not to lose examples. The parameter for the number of nearest neighbours used to generate "likedness" was set to the default `5`.
+In the training dataset, there were `29,090` examples with the target `QUALIFIED` attribute set to `1`, and `38,417` examples with target set to `0`. The dataset was therefore not fully balanced, it was skewed to value `0`. I applied the `SMOTE` (Synthetic Minority Over-Sampling Technique) over-sampling technique to the `1` examples in the training dataset to generate "synthetic" minority-class examples (i.e. `QUALIFIED`=`0`) so that the training dataset ended up with the same number of `0` and `1` values in the target attribute. I chose not to under-sample the majority class so as not to lose examples. The parameter for the number of nearest neighbours used to generate "likedness" was set to the default `5`.
 
 ```{r balance_dataset}
-#train <- DMwR::SMOTE(QUALIFIED~., train, perc.over=100)
+train <- DMwR::SMOTE(QUALIFIED~., train, perc.over=100)
 ```
 
 The result was a balanced training dataset with the same number of examples with target class `0` and `1` (`38,417`). Having a balanced dataset makes it more reliable to interpret the accuracy measure.
@@ -702,19 +705,12 @@ The following classification techniques were used. Details of parameter settings
 ### Accuracy Measures
 
 The following measures were captured with a 10-fold cross-validation model build and prediction test on validation data:
-* F1 (or F-score) - harmonic mean of the precision (proportion of positive predictions that were correct) and recall (proportion of positive examples that were correctly predicted), 1 implying perfect precision and recall.
-* AUC - (0 to 1 - higher the better) is summary metric for the `ROC` curve and was reported. It captures the relation between true-positive rate and false positive rate.
-* Time to run
 
-Note that without any further domain-specific understanding of the `QUALIFIED` target attribute, it was not clear whether to preference a false positive or false negative. However, given that the `kaggle` submission uses the `F1` metric, it was decided that the `F1` metric will be used. The `caret` package in `R`, uses accuracy by default, but allowed the use of a provided function to maximise. I coded the f-score (by calculating precision and recall and calculating the harmonic mean, as follows):
+* F1 (or f-score) - harmonic mean of the precision (proportion of positive predictions that were correct) and recall (proportion of positive examples that were correctly predicted), 1 implying perfect precision and recall.
+* AUC (Area under the curve) - (0 to 1 - higher the better) is summary metric for the `ROC` curve and was reported. It captures the relation between true-positive rate and false positive rate.
+* Time to run - elapsed time in hours (on my work laptop running `R` - single processor)
 
-f1 <- function (data, lev = NULL, model = NULL) {
-  precision <- posPredValue(data$pred, data$obs, positive = "yes")
-  recall  <- sensitivity(data$pred, data$obs, postive = "yes")
-  f1_val <- (2 * precision * recall) / (precision + recall)
-  names(f1_val) <- c("F1")
-  f1_val
-}
+Note that without any further domain-specific understanding of the `QUALIFIED` target attribute, it was not clear whether to preference a false positive or false negative. However, given that the `kaggle` submission uses the `F1` metric, it was decided that the `F1` metric will be used. The `caret` package in `R`, uses accuracy by default, but allowed the use of a provided function to maximise. I coded the f-score (by calculating precision and recall and calculating the harmonic mean (twice the product divided by the sum)).
 
 A combination of these measures were considered when determining the "best" model, as outlined in the sections below.
 
@@ -731,11 +727,11 @@ f1 <- function (data, lev = NULL, model = NULL) {
 
 ### Cross-validation
 
-All models were build with 10-fold cross-validation (which is considered good practice). Here, the model training process is repeated 10 times, each time with 9/10 of the data used for training and the remaining 1/10 for validation. Every example therefore partiticpates in the testing dataset (reducing the potential of over-fitting to a sample that the model happens to do well on). The combined accuracy is reported and is more reliable than running the model training once.
+All models were build with 10-fold cross-validation (which is considered good practice). Here, the model training process is repeated 10 times, each time with 9/10 of the data used for training and the remaining 1/10 for validation. Every example therefore participates in the testing dataset (reducing the potential of over-fitting to a sample that the model happens to do well on). The combined accuracy is reported and is more reliable than running the model training once. This way, the chance of the algorithm getting "lucky" with the training dataset and not being able to generalise to an unknown dataset is reduced.
 
-Classification functions in `R` include a parameter called `trControl` that can be used to control model training, where these options were set. The `classProbs` option was also set to `TRUE` so class probabilities were captured in addition to predicted class - this allows ROC curves to be drawn.
+Classification algorithms in `R` (`caret` package) included a parameter called `trControl` that can be used to control model training, where these options were set. The `classProbs` option was also set to `TRUE` so class probabilities were captured in addition to predicted class - this allowed ROC curves to be drawn and ensemble models to be built more robustly (weighted by probability rather than the final class).
 
-Further, the tuning parameter was set to `10`. This will ensure 10 combination of hyperparameters relevant to the model will be attempted and the best one automatically selected.
+Further, the tuning parameter was set to `10`. This allowed 10 combination of hyper-parameters relevant to the model will be attempted and the best one automatically selected. The algorithm had default starting values for these.
 
 ```{r cross_validation}
 
@@ -755,18 +751,18 @@ my_train <- function (my_method = "rf") {
 
 ## Decision Tree Model
 
-The `C5.0` algorithm is becoming the industry standard for decision trees, and so was used instead of the `ID3`. It grows a full decision tree (using information gain and entropy to determine splitting criteria) and then postprunes (cull branches after trees are built) overfitted branches of the tree. The `C50` package in `R` was used.
+The `C5.0` algorithm is becoming the industry standard for decision trees, and so was used instead of the `ID3`. It grows a full decision tree (using information gain and entropy to determine splitting criteria) and then post-prunes (cull branches after trees are built) over-fitted branches of the tree. The `C50` package in `R` was used.
 
 ```{r model_dtree}
 
 set.seed(3433)
-#model_c50 <- my_train(my_method = 'C5.0');
+model_c50 <- my_train(my_method = 'C5.0');
 model <- model_c50
 predict.raw <- predict(model, validation, type = "raw")
 predict.prob <- predict(model, validation, type = "prob")
 prediction <- prediction(predict.prob[[2]], ifelse(validation[,"QUALIFIED"] == "yes", 1, 0));
 
-# Accuracy & F score
+# Accuracy & f-score
 confusionMatrix <- confusionMatrix(validation[,"QUALIFIED"], predict.raw, positive = "yes")
 accuracy <- confusionMatrix[4]$byClass["Balanced Accuracy"]
 fscore <- confusionMatrix[4]$byClass["F1"]
@@ -784,16 +780,16 @@ summ_stats_c50 <- summ_stats
 
 There are three tuning parameters available: `trials` (number of boosting iterations), `model` (one of `tree` - default, or `rules` if the tree should be decomposed into a rule-based model) and `winnow` (`FALSE` - default, or `TRUE` if predictor feature selection is to be used).
 
-The `tuneLength` parameter in the `train` function in the `caret` package was set to `10`, meaning 10 different combinations of the above parameters were attempted before automatically determining the one with the best performance.
+The `tuneLength` parameter in the `train` function in the `caret` package was set to `10`, meaning 10 different combinations of the above parameters were attempted before determining the one with the best performance.
 
 The best fitting parameters were: `trials` = `80`, `model` = `rules`, `winnow` = `FALSE` on full training set.
 
 ### Performance
 
-Accuracy: `89.87%`
-F-score: `88.90%`
-AUC: `94.68%`
-Time to run: `~ 2` hours
+* Accuracy: `89.87%`
+* f-score: `88.90%`
+* AUC: `94.68%`
+* Time to run: `~ 2` hours
 
 ```{r model_dtree_roc}
 #plot(performance(prediction, "tpr", "fpr"), colorize=TRUE, lwd= 3, main= "ROC curve")
@@ -801,18 +797,18 @@ Time to run: `~ 2` hours
 
 ## K-Nearest Neighbour
 
-The K-Nearest Neighbour algorithm classifies an example based on the `k` examples closest to it, where distance is the Euclidean distance (square root of the sum of the square of the differences between each attribute). The `knn` package was used. Training is quick, but predictions take time, as it needs to calculate distances in the training dataset "on-the-fly".
+The K-Nearest Neighbour algorithm classifies an example based on the most frequent target attributes of `k` examples closest to it, where distance is the Euclidean distance (square root of the sum of the square of the differences between each attribute). The `knn` package was used. Training was quick, but predictions took time, as it needed to calculate distances in the training dataset "on-the-fly".
 
 ```{r model_knn}
 
 set.seed(3433)
-#model_knn <- my_train(my_method = 'knn');
+model_knn <- my_train(my_method = 'knn');
 model <- model_knn
 predict.raw <- predict(model, validation, type = "raw")
 predict.prob <- predict(model, validation, type = "prob")
 prediction <- prediction(predict.prob[[2]], ifelse(validation[,"QUALIFIED"] == "yes", 1, 0));
 
-# Accuracy & F score
+# Accuracy & f-score
 confusionMatrix <- confusionMatrix(validation[,"QUALIFIED"], predict.raw, positive = "yes")
 accuracy <- confusionMatrix[4]$byClass["Balanced Accuracy"]
 fscore <- confusionMatrix[4]$byClass["F1"]
@@ -836,10 +832,10 @@ The best fitting parameters were: `k` = `5` on full training set.
 
 ### Performance
 
-Accuracy: `88.80%`
-F-score: `87.98%`
-AUC: `93.63%`
-Time to run: `< 20` minutes (prediction took longer as expected)
+* Accuracy: `88.80%`
+* f-score: `87.98%`
+* AUC: `93.63%`
+* Time to run: `< 20` minutes (prediction took longer as expected)
 
 ```{r model_knn_roc}
 #plot(performance(prediction, "tpr", "fpr"), colorize=TRUE, lwd= 3, main= "ROC curve")
@@ -851,13 +847,13 @@ The Random Forest algorithm is an example of bagging, where it uses an algorithm
 
 ```{r model_rf}
 set.seed(3433)
-#model_rf <- my_train(my_method = 'rf');
+model_rf <- my_train(my_method = 'rf');
 model <- model_rf
 predict.raw <- predict(model, validation, type = "raw")
 predict.prob <- predict(model, validation, type = "prob")
 prediction <- prediction(predict.prob[[2]], ifelse(validation[,"QUALIFIED"] == "yes", 1, 0));
 
-# Accuracy & F score
+# Accuracy & f-score
 confusionMatrix <- confusionMatrix(validation[,"QUALIFIED"], predict.raw, positive = "yes")
 accuracy <- confusionMatrix[4]$byClass["Balanced Accuracy"]
 fscore <- confusionMatrix[4]$byClass["F1"]
@@ -869,22 +865,22 @@ auc <- as.numeric(performance(prediction,"auc")@y.values)
 summ_stats <- as.data.frame(rbind(accuracy, fscore, auc))
 colnames(summ_stats) <- "Measure"
 summ_stats_rf <- summ_stats
-
 ```
 
 ### Parameter Tuning
 
 The Random Forest model has the `mtry` parameter, which is the number of attributes randomly collected to be sampled at each split. The default is the square root of the number of attributes.
+
 The `tuneLength` parameter in the `train` function in the `caret` package was set to `10`, meaning 10 different values of the `mtry` were attempted before determining the one with the best performance.
 
 The best fitting parameters were: `mtry` = `83`.
 
 ### Accuracy
 
-Accuracy: `88.14%`
-F-score: `87.27%`
-AUC: `93.05%`
-Time to run: `~4` hours
+* Accuracy: `88.14%`
+* f-score: `87.27%`
+* AUC: `93.05%`
+* Time to run: `~4-5` hours
 
 ```{r model_rf_roc}
 #plot(performance(prediction, "tpr", "fpr"), colorize=TRUE, lwd= 3, main= "ROC curve")
@@ -892,18 +888,18 @@ Time to run: `~4` hours
 
 ## GBM (Gradient Boost Model)
 
-The GBM algorithm is an example of a boosting algorithm where multiple trees are built sequentially, with subsequent trees focussing on examples that were previously mis-classified. The `gbm` package was used.
+The `GBM` algorithm is an example of a boosting algorithm where multiple trees are built sequentially, with subsequent trees focusing on examples that were previously mis-classified (by increasing their weights). The `gbm` package was used.
 
 ```{r model_gbm}
 
 set.seed(3433)
-#model_gbm <- my_train(my_method = 'gbm');
+model_gbm <- my_train(my_method = 'gbm');
 model <- model_gbm
 predict.raw <- predict(model, validation, type = "raw")
 predict.prob <- predict(model, validation, type = "prob")
 prediction <- prediction(predict.prob[[2]], ifelse(validation[,"QUALIFIED"] == "yes", 1, 0));
 
-# Accuracy & F score
+# Accuracy & f-score
 confusionMatrix <- confusionMatrix(validation[,"QUALIFIED"], predict.raw, positive = "yes")
 accuracy <- confusionMatrix[4]$byClass["Balanced Accuracy"]
 fscore <- confusionMatrix[4]$byClass["F1"]
@@ -927,10 +923,10 @@ The best fitting parameters were: `n.trees` = `450`, `interaction.depth` = `10`,
 
 ### Performance
 
-Accuracy: `90.83%`
-F-score: `90.18%`
-AUC: `96.04%`
-Time to run: `~ 6` hours
+* Accuracy: `90.83%`
+* f-score: `90.18%`
+* AUC: `96.04%`
+* Time to run: `~ 3-4` hours
 
 ```{r model_gbm_roc}
 #plot(performance(prediction, "tpr", "fpr"), colorize=TRUE, lwd= 3, main= "ROC curve")
@@ -938,13 +934,13 @@ Time to run: `~ 6` hours
 
 ## Support Vector Machine (SVM)
 
-The SVM (Support Vector Machine) algorithm . The `svmRadial` package was used; it uses a radial kernel function.
+The SVM (Support Vector Machine) algorithm works by checking for  hyperplanes (higher dimension than attribute space) that can create good margins between classes of data by using `kernel` functions to transform the data. The `svmRadial` package was used; it uses a radial kernel function.
 
 The numeric attributes were normalised for better performance, and only 50% of the examples in the training dataset (randomly drawn without replacement) were used, since training on the full dataset took too long.
 
 ```{r model_svm}
 set.seed(3433)
-#model_svm <- my_train(my_method = 'svm');
+model_svm <- my_train(my_method = 'svm');
 train_sample <- train[sample(nrow(train), 0.50*nrow(train)),];
 
 my_train <- function (my_method = "svm") {
@@ -963,7 +959,7 @@ predict.raw <- predict(model, validation, type = "raw")
 predict.prob <- predict(model, validation, type = "prob")
 prediction <- prediction(predict.prob[[2]], ifelse(validation[,"QUALIFIED"] == "yes", 1, 0));
 
-# Accuracy & F score
+# Accuracy & f-score
 confusionMatrix <- confusionMatrix(validation[,"QUALIFIED"], predict.raw, positive = "yes")
 accuracy <- confusionMatrix[4]$byClass["Balanced Accuracy"]
 fscore <- confusionMatrix[4]$byClass["F1"]
@@ -982,16 +978,16 @@ summ_stats_svm <- summ_stats
 
 The Radial SVM model has two parameters: `C` (penalty imposed on the model for making an error) and `sigma` (how dependent is the SVM boundary to just the closest points).
 
- The `tuneLength` parameter in the `train` function in the `caret` package was set to `10`, meaning 10 different values of the `mtry` were attempted before determining the one with the best performance.
+The `tuneLength` parameter in the `train` function in the `caret` package was set to `10`, meaning 10 different values of the `mtry` were attempted before determining the one with the best performance.
 
 The best fitting parameters were: `sigma` = `0.0273`, `C` = `4`.
 
 ### Accuracy
 
-Accuracy: `89.72%`
-F-score: `88.89%`
-AUC: `93.40%`
-Time to run: `~8` hours
+* Accuracy: `89.72%`
+* f-score: `88.89%`
+* AUC: `93.40%`
+* Time to run: `~8` hours
 
 ```{r model_svm_roc}
 #plot(performance(prediction, "tpr", "fpr"), colorize=TRUE, lwd= 3, main= "ROC curve")
@@ -999,18 +995,18 @@ Time to run: `~8` hours
 
 ## Neural Networks
 
-The `nnet` package provides a feed-forward single-hidden-layer neural network algorithm, which was used. The numeric attributes were normalised for better performance.
+Neural networks are popular data mining algorithm (especially in the imaging space) and were roughly based on neurons, where examples "flow" through nodes and depending on where they land (i.e., error relative to the actual target), weights in the nodes are adjusted to "learn" from their mistake. This process is repeated for each example. The `nnet` package provides a feed-forward single-hidden-layer neural network algorithm, which was used. The numeric attributes were normalised for better performance.
 
 ```{r model_nnet}
 
 set.seed(3433)
-#model_nnet <- my_train(my_method = 'nnet');
+model_nnet <- my_train(my_method = 'nnet');
 model <- model_nnet
 predict.raw <- predict(model, validation, type = "raw")
 predict.prob <- predict(model, validation, type = "prob")
 prediction <- prediction(predict.prob[[2]], ifelse(validation[,"QUALIFIED"] == "yes", 1, 0));
 
-# Accuracy & F score
+# Accuracy & f-score
 confusionMatrix <- confusionMatrix(validation[,"QUALIFIED"], predict.raw, positive = "yes")
 accuracy <- confusionMatrix[4]$byClass["Balanced Accuracy"]
 fscore <- confusionMatrix[4]$byClass["F1"]
@@ -1034,10 +1030,10 @@ The best fitting parameters were: `size` = `9`, `decay` = `0.001` on full traini
 
 ### Performance
 
-Accuracy: `89.87%`
-F-score: `89.00%`
-AUC: `94.68%`
-Time to run: `~ 4` hours
+* Accuracy: `89.87%`
+* f-score: `89.00%`
+* AUC: `94.68%`
+* Time to run: `~ 4` hours
 
 ```{r model_nnet_roc}
 #plot(performance(prediction, "tpr", "fpr"), colorize=TRUE, lwd= 3, main= "ROC curve")
@@ -1047,7 +1043,7 @@ Time to run: `~ 4` hours
 
 The Random Forest model (example of Bagging) and the GBM model (example of Boosting) are specialised ensemble models, that build and aggregate decision tree models in parallel and sequentially (respectively). They both performed well, and so a manual ensemble was attempted using all the models built (with the best hyper-parameter tuned for each).
 
-The predictions (probabilities of class "yes") across these three models were used to calculate an average probability, and the target attribute was set to `yes` if it exceeded 0.5, otherwise `no`. The average was weighted based on the relative F-scores of the three models (i.e., better performing models were given more weight).
+The predictions (probabilities of class "yes") across all these models were used to calculate an average probability, and the target attribute was set to `yes` if it exceeded the threshold `0.5`, otherwise `no`. The average was also weighted based on the relative f-scores of the three models (i.e., better performing models were given more weight).
 
 ```{r ensemble}
 
@@ -1074,7 +1070,7 @@ predict.raw <- factor(ifelse(predict.prob > cut_off, 1, 0), labels=c("no", "yes"
 
 prediction <- prediction(predict.prob, ifelse(validation[,"QUALIFIED"] == "yes", 1, 0));
 
-# Accuracy & F score
+# Accuracy & f-score
 confusionMatrix <- confusionMatrix(validation[,"QUALIFIED"], predict.raw, positive = "yes")
 accuracy <- confusionMatrix[4]$byClass["Balanced Accuracy"]
 fscore <- confusionMatrix[4]$byClass["F1"]
@@ -1089,16 +1085,17 @@ summ_stats_ensemble <- summ_stats
 summ_stats_ensemble
 ```
 
-Various combinations weights (adding up to `1`) were attempted to optimise the overall F-score. Various cut-offs (to determine when a prediction is a `yes`) were used too. However, the GBM algorithm out-performed all other combinations of voted scores. Further, the best cut-off was found to be 0.5.
+While numerous combinations of weights (adding up to `1`) were attempted to optimise the overall f-score, and various cut-offs (to determine when a prediction is a `yes`) were attempted, ultimately, the GBM algorithm out-performed all of them. Further, the best cut-off was found to be `0.5`.
 
-## Selecting the best model
+# Selecting the best model
 
 The selected model was the GBM model, with hyper-parameters: `n.trees` = `450`, `interaction.depth` = `10`, `shrinkage` = `0.1`, `n.minobsinnode` = `10` on full training set.
 
 There were several considerations when selecting the best model:
 
-* Accuracy (specifically, the F-score) - While training accuracy might be very good, it is important for the model to generalise well (i.e., not overfit - low variance). The algorithm should also not be so simplex (for example, using a linear regression model for a complex problem will result in high bias). Further, the algorithm needs to deal well with noise.
-* Speed / Time to run: This is a very important consideration given limited resources (i.e., not a very powerful laptop); the time may be taken during model build (like SVM) or prediction (like K-nearest neighbour). Time to run an  SVM algorithm depends for example on the training size, while other algorithms like random forests are  dependent on number of attributes.
+* Accuracy (specifically, the f-score) - While training accuracy is good, it was important for the model to generalise well (i.e., not overfit - low variance). The GBM model reduces variance through boosting.
+* The algorithm should also not be too simple (for example, using a linear regression model for a complex problem will result in high bias) and be robuse (deal with noise). The GBM algorithm does so.
+* Speed / Time to run: This is a very important consideration given limited resources (i.e., not a very powerful laptop). It is the elapsed time taken during model build and prediction. For example, the `SVM` algorithm was promising, but took too long to run, and was therefore not preferred over the GBM algorithm.
 * Interpretability: In some domains, it is critical to be able to explain the "rule set" behind the underlying model (for example, if used in determining if prisoners should get parole, you want to understand how it's using race, gender, etc.). In this case however, it seemed less important. Decision trees aid interpretability, while neural networks for example, don't. Associated with interpretability is the concept of goodness, where a simpler set of rules is preferred to a more substantive set even at the cost of some accuracy.
 
 Based on all these considerations, the selected model was the GBM. Intuitively, this made sense because it seems like all the algorithms were able to classify ~88-90% of the cases fairly consistently, but struggled with the last 10-12%, and so a boosting algorithm that focused in on those mis-classified examples in subsequent iterations did better.
@@ -1113,7 +1110,33 @@ The ROC curve for the best model (GBM)
 plot(performance(prediction, "tpr", "fpr"), colorize=TRUE, lwd= 3, main= "ROC curve")
 ```
 
-## Submitting Predictions
+Confusion Matrix:
+
+!!! FIX ME !!!
+
+          Reference
+Prediction   no  yes
+       no  3703  565
+       yes  114 3118
+       
+The model was mis-classifying `yes` more often than it was mis-classifying `no`, suggesting a higher specificity than sensitivity.
+
+Other statistics:
+
+* Accuracy: 90.95% 
+* No Information Rate : 0.5089 (accuracy if random)
+* P-Value [Acc > NIR] : < 2.2e-16 (value less than 0.05 suggests it significantly outperformed randomness)
+* Sensitivity : 0.8466
+* Specificity : 0.9701
+* Pos Pred Value : 0.9647
+* Neg Pred Value : 0.8676
+* Prevalence : 0.4911
+* Detection Rate : 0.4157
+* Detection Prevalence : 0.4309
+
+# Submitting Predictions
+
+All the pre-processing steps applied on the training dataset was applied on the testing dataset and the best model was used to predict `QUALIFIED` attribute. the output was collated in the format needed by Kaggle and submitted successfully.
 
 ```{r submitting_predictions}
 
@@ -1136,43 +1159,38 @@ write.csv(test_output,paste0("C:\\Users\\d309144\\OneDrive - Telstra\\Microcrede
 
 ```
 
-# Reflections
+# Reflections & Learnings
 
 I've captured my reflections here, including what I've learnt, and what I would do differently if I did it again.
 
-## I learnt a lot
+## Test and Learn Quickly
 
-When I started this assignment, I didn't realise how much I will learn, from a brand new programming language (`R`), to concepts in advanced analytics, to practical application through code.
+I spent a lot of time applying transformations to the data that I thought made sense. I initially completed all my pre-processing before testing, and was horrified to get a really poor accuracy score when tested against the first algorithm! I then decided to build a "reference" model that I would use to test each transformation (not once just once at the end) to see if it significantly improved performance (and also to test one type of transformation over another - like how to treat missing values).
 
-Because of the popularity of `R` among data scientists, this investment in learning `R` will pay off in my career. It has many useful packages that allow easy data manipulation and application of well known statistical methods and data mining algorithms.
+In the future, I will definitely be taking the latter approach.
+
+## It's science with art
+
+As I researched different methods for pre-processing, setting parameters, etc., a lot of recommendations that I found on the internet were "it depends", suggesting that there is no "one-size-fits-all", and that experimentation is needed since every dataset is different. Therefore there is art as well as science in the process, and no "silver bullet" solution. With more experience, I suppose choices will become easier, but when starting, it just seems like there are so many possibly ways of approaching the problem, that one can get lost.
+
+I also found it curious, that you can get to a decent accuracy fairly quickly, but making significant improvement from there was very difficult! In fact, you can quickly get bogged down by delving deep into a hypothesis to improve performance, and many many hours later, coming out with little or nothing to show for it. I learnt that the time would have been better spent on exploring more broadly.
+
+## I under-estimated the effort
+
+I did not expect algorithms to run for hours, with the longest one I had running for 24 hours on my laptop! The learning was to test my algorithm on subsets of data an prove it out before running it on a full 10-fold cross-validation across the entire dataset, with multiple hyper-parameters being tested at the same time!
+
+One of my practical learnings was to consistently back-up my models and clearly document the parameters that I used to run them (apply version control). Initially, I'd get a good result, but I'd lose it and not be able to re-create it (or re-creating it would take another 24 hours!) I therefore started using `github` to back-up my work.
+
+If I had more time (or was doing it again), I'd definitely do more work earlier, rather than procrastinating and trying to finish things quickly!
+
+## Need more statistical background
+
+While I can get away with running these algorithms, it's clear that a strong statistics background will help cement concepts better, and also provide a stronger basis for making one decision over another. I intend to pursue basic statistics courses so I can appreciate the use of commonly applied statistics (like `anova`).
+
+## Ultimately, I learnt a lot
+
+When I started this assignment, I didn't realise how much I will learn, from a brand new programming language (`R`), concepts in advanced analytics, to practical application through code. I explored tons of `R` packages to perform transformations and apply statistical methods and data mining algorithms. Because of the popularity of `R` among data scientists, I believe that this investment in learning `R` will pay off in my career.
 
 The advanced analytics concepts in the class became much clearer when I applied them through this assignment. For example, the concept of bias and variance, when applied (for example through bagging - random forests), became a lot clearer, and I appreciate this trade-off a lot more now, than I might have otherwise.
 
-Doing the assignment also got me to research a lot on Google, StackOverflow was my best friend!
-
-## I spent too much time pre-processing without testing
-
-I spent a lot of time applying transformations to the data that I thought made sense. I initially completed all my pre-processing before testing, and was horrified to get a really poor accuracy score when tested against the first algorithm!
-
-I then decided to build a "reference" model that I would use to test each transformation (not once just once at ththe end) to see if it significantly improved performance (and also to test one type of transformation over another - like how to treat missing values). In the future, I will definitely be taking the latter approach.
-
-## It takes a lot to get a small improvement.
-
-It was interesting that it takes a lot to
-
-If I had more time...
-
-## I under-estimated the effort involved
-
-Building 5 models didn't seem that time-consuming, but when you explore data, you realise that there are so many possibilities that can be explored. One of the things I was guilty of was delving too deep into one algorithm to understand it better. Often though, 
-
-I did not expect algorithms to run for hours, with the longest one I had running for 24 hours on my laptop! The learning was to test my algorithm on subsets of data an prove it out before running it on a full 10-fold cross-validation across the entire dataset, run multiple times with different hyperparameters being tested.
-
-## I learnt that there is no "one size fits all"
-
-As I researched different methods for pre-processing, setting parameters, etc., a lot of recommendations that I found on the internet were "it depends", suggesting that there is no "one-size-fits-all", and that experimentation is needed since every dataset is different. Therefore there is art as well as science in the process, and no "silver bullet" solution.
-
-## Lots of statistics
-
-While I can get away with running these algorithms, it's clear that a strong statistics background will help cement concepts better, and also provide a stronger basis for making one decision over another.
-
+In addition to going through the course notes and listening to all the lectures and workshops, doing the assignment also got me to research a lot on `Google.` `StackOverflow` was my best friend!
